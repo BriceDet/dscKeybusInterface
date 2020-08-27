@@ -109,6 +109,7 @@ class dscKeybusInterface {
     bool armed[dscPartitions], armedAway[dscPartitions], armedStay[dscPartitions];
     bool noEntryDelay[dscPartitions], armedChanged[dscPartitions];
     bool alarm[dscPartitions], alarmChanged[dscPartitions];
+	bool alarmMemory[dscPartitions], alarmMemoryChange[dscPartitions];
     bool exitDelay[dscPartitions], exitDelayChanged[dscPartitions];
     byte exitState[dscPartitions], exitStateChanged[dscPartitions];
     bool entryDelay[dscPartitions], entryDelayChanged[dscPartitions];
@@ -117,6 +118,8 @@ class dscKeybusInterface {
     byte openZones[dscZones], openZonesChanged[dscZones];    // Zone status is stored in an array using 1 bit per zone, up to 64 zones
     bool alarmZonesStatusChanged;
     byte alarmZones[dscZones], alarmZonesChanged[dscZones];  // Zone alarm status is stored in an array using 1 bit per zone, up to 64 zones
+    bool alarmZonesMemoryStatusChanged;
+    byte alarmZonesMemory[dscPartitions][dscZones], alarmZonesMemoryChanged[dscPartitions][dscZones];  // Zone alarm memory status is stored in an array using 1 bit per zone, up to 64 zones
 
     // panelData[] and moduleData[] store panel and keypad data in an array: command [0], stop bit by itself [1],
     // followed by the remaining data.  These can be accessed directly in the sketch to get data that is not already
@@ -157,6 +160,8 @@ class dscKeybusInterface {
     void processPanel_0x2D();
     void processPanel_0x34();
     void processPanel_0x3E();
+	void processPanel_0x5D();
+	void processPanel_0x63();
     void processPanel_0xA5();
     void processPanel_0xE6();
     void processPanel_0xE6_0x09();
@@ -228,6 +233,8 @@ class dscKeybusInterface {
     void printModule_Panel_0xD5();
     void printModule_Notification();
     void printModule_Keys();
+	
+	void processPanel_AlarmMemory (byte partition);
 
     bool validCRC();
     void writeKeys(const char * writeKeysArray);

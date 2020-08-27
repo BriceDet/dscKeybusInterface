@@ -31,11 +31,17 @@ void dscKeybusInterface::resetStatus() {
     readyChanged[partition] = true;
     armedChanged[partition] = true;
     alarmChanged[partition] = true;
+	alarmMemoryChange[partition] = true;
     fireChanged[partition] = true;
     disabled[partition] = true;
+	
+	for (byte zoneGroup = 0; zoneGroup < dscZones; zoneGroup++) {
+      alarmZonesMemoryChanged[partition][zoneGroup] = 0xFF;
+    }
   }
   openZonesStatusChanged = true;
   alarmZonesStatusChanged = true;
+  alarmZonesMemoryStatusChanged = true;
   for (byte zoneGroup = 0; zoneGroup < dscZones; zoneGroup++) {
     openZonesChanged[zoneGroup] = 0xFF;
     alarmZonesChanged[zoneGroup] = 0xFF;
@@ -659,6 +665,44 @@ void dscKeybusInterface::processPanel_0x3E() {
   }
 }
 
+void dscKeybusInterface::processPanel_AlarmMemory (byte partition) {
+  //
+  //bool alarmZonesMemoryStatusChanged;
+  //byte alarmZonesMemory[dscZones], alarmZonesMemoryChanged[dscZones];
+  //bool alarmMemory[dscPartitions], alarmMemoryChange[dscPartitions];
+  
+  // Keypad lights for commands 0x05, 0x0A, 0x1B, 0x27, 0x2D, 0x34, 0x3E, 0x5D
+  // see void dscKeybusInterface::printPanelLights(byte panelByte) in dscKeybusPrintData.cpp
+  
+  // check if memory light is ON
+  if (bitRead(panelData[2],2) != alarmMemory[partition]) {
+    alarmMemoryChange[partition] = true;
+    
+	alarmMemory[partition] = bitRead(panelData[2],2);
+    
+	byte zoneGroup = 0;
+    for (byte panelByte = 3; panelByte <= 6; panelByte++) {
+      if (panelData[panelByte] != 0) {
+        for (byte zoneBit = 0; zoneBit < 8; zoneBit++) {
+          alarmZonesMemory[partition][zoneGroup] = bitRead(panelData[panelByte],zoneBit);
+        }
+      }
+	  zoneGroup = zoneGroup + 1;
+    }
+  }
+}
+
+// Flash panel lights: status and zones 1-32, partition 1
+void dscKeybusInterface::processPanel_0x5D() {
+  if (!validCRC()) return;
+  processPanel_AlarmMemory(1);
+}
+
+// Flash panel lights: status and zones 1-32, partition 2
+void dscKeybusInterface::processPanel_0x63() {
+  if (!validCRC()) return;
+  processPanel_AlarmMemory(2);
+}
 
 void dscKeybusInterface::processPanel_0xA5() {
   if (!validCRC()) return;
